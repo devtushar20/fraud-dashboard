@@ -4,7 +4,7 @@ st.set_page_config(page_title="Fraud Command Center", layout="wide")
 
 @st.cache_data
 def load():
-    return pd.read_csv("data/processed_transactions.csv.gz"), pd.read_csv("out/hotspots.csv")
+    return pd.read_csv("processed_transactions.csv.gz"), pd.read_csv("hotspots.csv")
 df, hot = load()
 CATS = sorted(df.merchant_category.unique())
 view = st.sidebar.radio("View", ["Overview", "Live Feed", "Risk Map", "Historical Analytics", "Merchant-City Matrix", "ML Scoring Simulator"])
@@ -15,7 +15,7 @@ if view == "Overview":
     c.metric("HIGH-risk", f"{(df.risk_level == 'HIGH').sum():,}")
     st.dataframe(df.risk_level.value_counts().rename("count"))
 elif view == "Live Feed":
-    p = "out/live_predictions.jsonl"
+    p = "live_predictions.jsonl"
     if os.path.exists(p):
         st.dataframe(pd.read_json(p, lines=True).tail(50))
     else:
@@ -34,7 +34,7 @@ elif view == "Merchant-City Matrix":
     pv = (df.pivot_table(index="city", columns="channel", values="is_fraud", aggfunc="mean") * 100).round(2)
     st.dataframe(pv); st.subheader("Top hotspot merchants"); st.dataframe(hot)
 else:
-    model = joblib.load("out/rf.joblib"); cols = list(model.feature_names_in_)
+    model = joblib.load("rf.joblib"); cols = list(model.feature_names_in_)
     c1, c2 = st.columns(2)
     amount = c1.number_input("Amount (INR)", 10.0, 500000.0, 5000.0)
     median = c1.number_input("Customer median amount (INR)", 10.0, 500000.0, 5000.0)
